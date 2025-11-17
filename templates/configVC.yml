@@ -23,6 +23,11 @@ network:
   restPort: 9991
   restPassword: "${REST_PASSWORD}"
   restDebug: false
+  rpcEnable: true
+  rpcAddress: 127.0.0.1
+  rpcPort: 9891
+  rpcPassword: "${REST_PASSWORD}"
+  rpcDebug: false
 protocols:
   p25:
     enable: true
@@ -78,18 +83,19 @@ system:
     location: "${LOCATION}"
   config:
     authoritative: true
-    channelId: 3
-    channelNo: 802
+    channelId: ${V_CH_ID}
+    channelNo: ${C_CH_NO}
     controlCh:
-      restAddress: 127.0.0.1
-      restPort: 9990
-      restPassword: "${REST_PASSWORD}"
+      rpcAddress: 127.0.0.1
+      rpcPort: 9890
+      rpcPassword: "${REST_PASSWORD}"
       notifyEnable: true
     voiceChNo:
-      - channelNo: 802
-        restAddress: 127.0.0.1
-        restPort: 9991
-        restPassword: "${REST_PASSWORD}"
+      - channelId: ${V_CH_ID}
+        channelNo: ${V_CH_NO}
+        rpcAddress: 127.0.0.1
+        rpcPort: 9891
+        rpcPassword: "${REST_PASSWORD}"
     nac: ${NAC}
     ran: 1
     pSuperGroup: 0911

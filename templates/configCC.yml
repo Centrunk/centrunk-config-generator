@@ -24,6 +24,12 @@ network:
     restPort: 9990
     restPassword: "${REST_PASSWORD}"
     restDebug: false
+  rpcEnable: true
+  rpcAddress: 127.0.0.1
+  rpcPort: 9891
+  rpcPassword: "${REST_PASSWORD}"
+  rpcDebug: false
+
 protocols:
     p25:
         enable: true
@@ -82,10 +88,11 @@ system:
         channelId: ${CC_CH_ID}
         channelNo: ${CC_CH_NO}
         voiceChNo:
-            - channelNo: ${V_CH_NO}
-              restAddress: 127.0.0.1
-              restPort: 9991
-              restPassword: "${REST_PASSWORD}"
+            - channelId: ${V_CH_ID}
+              channelNo: ${V_CH_NO}
+              rpcAddress: 127.0.0.1
+              rpcPort: 9891
+              rpcPassword: "${REST_PASSWORD}"
         nac: ${NAC}
         ran: 1
         pSuperGroup: 0911
