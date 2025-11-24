@@ -7,7 +7,7 @@ log:
   fileRoot: DVM-VC1
 network:
   enable: true
-  id: ${NET_ID}
+  id: ${V_PEER_ID}
   address: 100.76.121.128
   port: 63030
   jitter: 360
