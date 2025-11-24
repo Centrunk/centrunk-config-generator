@@ -24,11 +24,11 @@ network:
     restPort: 9990
     restPassword: "${REST_PASSWORD}"
     restDebug: false
-  rpcEnable: true
-  rpcAddress: 127.0.0.1
-  rpcPort: 9891
-  rpcPassword: "${REST_PASSWORD}"
-  rpcDebug: false
+    rpcEnable: true
+    rpcAddress: 127.0.0.1
+    rpcPort: 9891
+    rpcPassword: "${REST_PASSWORD}"
+    rpcDebug: false
 
 protocols:
     p25:
