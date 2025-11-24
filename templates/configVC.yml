@@ -84,7 +84,7 @@ system:
   config:
     authoritative: true
     channelId: ${V_CH_ID}
-    channelNo: ${C_CH_NO}
+    channelNo: ${V_CH_NO}
     controlCh:
       rpcAddress: 127.0.0.1
       rpcPort: 9890
