@@ -25,6 +25,19 @@
       color: #eee;
     }
 
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    header img {
+      height: 120px;
+      width: auto;
+    }
+
     h1 {
       font-size: 1.6rem;
       text-align: center;
@@ -94,6 +107,7 @@
 
     #outputContainer.dual {
       flex-direction: row;
+      gap: 3rem;
     }
 
     .output-wrapper {
@@ -164,7 +178,10 @@
 </head>
 
 <body>
-  <h1>Centrunk YAML Config Generator</h1>
+  <header>
+    <img src="images/centexlogo.png" alt="Centex Logo">
+    <h1>Site Config Generator</h1>
+  </header>
 
   <form id="configForm" novalidate>
     <label>Config Type
@@ -179,7 +196,6 @@
   <div id="actions">
     <button id="generateBtn" disabled>Generate Config</button>
     <button id="downloadBtn" disabled>Download YAML</button>
-    <button id="copyBtn" disabled>Copy</button>
   </div>
 
   <div id="outputContainer" class="single">
@@ -225,7 +241,6 @@
     const convWrapper = document.getElementById('convWrapper');
     const generateBtn = document.getElementById('generateBtn');
     const downloadBtn = document.getElementById('downloadBtn');
-    const copyBtn = document.getElementById('copyBtn');
     const copyCCBtn = document.getElementById('copyCCBtn');
     const copyVCBtn = document.getElementById('copyVCBtn');
     let varFields = []; // array of variable names currently in the form
@@ -328,7 +343,9 @@
         hiddenOutputCC.value = '';
         hiddenOutputVC.value = '';
         hiddenOutputConv.value = '';
-        downloadBtn.disabled = copyBtn.disabled = true;
+        downloadBtn.disabled = true;
+        copyCCBtn.disabled = true;
+        copyVCBtn.disabled = true;
       }
     }
 
@@ -373,7 +390,7 @@
           hljs.highlightElement(outputConv);
         }
 
-        downloadBtn.disabled = copyBtn.disabled = false;
+        downloadBtn.disabled = false;
       } catch (e) {
         const errorMsg = `Error: ${e.message}`;
         if (configTypeEl.value === 'TRUNKING') {
@@ -385,24 +402,8 @@
           outputConv.textContent = errorMsg;
           hiddenOutputConv.value = errorMsg;
         }
-        downloadBtn.disabled = copyBtn.disabled = true;
+        downloadBtn.disabled = true;
       }
-    }
-
-    function copy() {
-      const type = configTypeEl.value;
-      let textToCopy = '';
-
-      if (type === 'TRUNKING') {
-        textToCopy = `=== Control Channel (CC) ===\n\n${hiddenOutputCC.value}\n\n=== Voice Channel (VC) ===\n\n${hiddenOutputVC.value}`;
-      } else {
-        textToCopy = hiddenOutputConv.value;
-      }
-
-      navigator.clipboard.writeText(textToCopy).then(() => {
-        copyBtn.textContent = 'Copied ✔';
-        setTimeout(() => copyBtn.textContent = 'Copy', 2000);
-      });
     }
 
     function download() {
@@ -458,7 +459,6 @@
     // Event bindings
     generateBtn.addEventListener('click', e => { e.preventDefault(); generate(); });
     downloadBtn.addEventListener('click', e => { e.preventDefault(); download(); });
-    copyBtn.addEventListener('click', e => { e.preventDefault(); copy(); });
     copyCCBtn.addEventListener('click', e => { e.preventDefault(); copyCC(); });
     copyVCBtn.addEventListener('click', e => { e.preventDefault(); copyVC(); });
     configTypeEl.addEventListener('change', () => {
@@ -469,7 +469,7 @@
       hiddenOutputCC.value = '';
       hiddenOutputVC.value = '';
       hiddenOutputConv.value = '';
-      downloadBtn.disabled = copyBtn.disabled = true;
+      downloadBtn.disabled = true;
       copyCCBtn.disabled = true;
       copyVCBtn.disabled = true;
     });
