@@ -81,13 +81,52 @@
       justify-content: center;
     }
 
-    pre {
+    #outputContainer {
+      display: flex;
+      gap: 1rem;
       width: 100%;
       max-width: 1080px;
+    }
+
+    #outputContainer.single {
+      flex-direction: column;
+    }
+
+    #outputContainer.dual {
+      flex-direction: row;
+    }
+
+    .output-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .output-wrapper h3 {
+      margin: 0;
+      font-size: 1rem;
+      flex: 1;
+    }
+
+    .copy-individual {
+      padding: .4rem .8rem;
+      font-size: .85rem;
+    }
+
+    pre {
+      width: 100%;
       margin: 0;
     }
 
-    code#output {
+    code.output {
       display: block;
       width: 100%;
       height: 520px;
@@ -102,7 +141,7 @@
       white-space: pre-wrap;
     }
 
-    #hiddenOutput {
+    .hidden-output {
       display: none;
     }
 
@@ -130,8 +169,7 @@
   <form id="configForm" novalidate>
     <label>Config Type
       <select id="configType">
-        <option value="CC">Control&nbsp;Channel&nbsp;(CC)</option>
-        <option value="VC">Voice&nbsp;Channel&nbsp;(VC)</option>
+        <option value="TRUNKING">Trunking&nbsp;Site</option>
         <option value="CONVENTIONAL">Conventional&nbsp;Site</option>
       </select>
     </label>
@@ -144,19 +182,52 @@
     <button id="copyBtn" disabled>Copy</button>
   </div>
 
-  <textarea id="hiddenOutput" readonly></textarea>
-  <pre><code id="output" class="language-yaml" aria-label="Generated YAML config"></code></pre>
+  <div id="outputContainer" class="single">
+    <div class="output-wrapper" id="ccWrapper" style="display: none;">
+      <div class="output-header">
+        <h3>Control Channel (CC)</h3>
+        <button id="copyCCBtn" class="copy-individual" disabled>Copy CC</button>
+      </div>
+      <textarea class="hidden-output" id="hiddenOutputCC" readonly></textarea>
+      <pre><code class="output language-yaml" id="outputCC" aria-label="Generated CC YAML config"></code></pre>
+    </div>
+    <div class="output-wrapper" id="vcWrapper" style="display: none;">
+      <div class="output-header">
+        <h3>Voice Channel (VC)</h3>
+        <button id="copyVCBtn" class="copy-individual" disabled>Copy VC</button>
+      </div>
+      <textarea class="hidden-output" id="hiddenOutputVC" readonly></textarea>
+      <pre><code class="output language-yaml" id="outputVC" aria-label="Generated VC YAML config"></code></pre>
+    </div>
+    <div class="output-wrapper" id="convWrapper">
+      <div class="output-header">
+        <h3>Configuration</h3>
+      </div>
+      <textarea class="hidden-output" id="hiddenOutputConv" readonly></textarea>
+      <pre><code class="output language-yaml" id="outputConv" aria-label="Generated YAML config"></code></pre>
+    </div>
+  </div>
 
   <script>
     const templateCache = {}; // { CC: string, VC: string, CONVENTIONAL: string }
     const templateVars = {}; // { CC: [], VC: [], CONVENTIONAL: [] }
     const form = document.getElementById('configForm');
     const configTypeEl = document.getElementById('configType');
-    const output = document.getElementById('output');
-    const hiddenOutput = document.getElementById('hiddenOutput');
+    const outputCC = document.getElementById('outputCC');
+    const outputVC = document.getElementById('outputVC');
+    const outputConv = document.getElementById('outputConv');
+    const hiddenOutputCC = document.getElementById('hiddenOutputCC');
+    const hiddenOutputVC = document.getElementById('hiddenOutputVC');
+    const hiddenOutputConv = document.getElementById('hiddenOutputConv');
+    const outputContainer = document.getElementById('outputContainer');
+    const ccWrapper = document.getElementById('ccWrapper');
+    const vcWrapper = document.getElementById('vcWrapper');
+    const convWrapper = document.getElementById('convWrapper');
     const generateBtn = document.getElementById('generateBtn');
     const downloadBtn = document.getElementById('downloadBtn');
     const copyBtn = document.getElementById('copyBtn');
+    const copyCCBtn = document.getElementById('copyCCBtn');
+    const copyVCBtn = document.getElementById('copyVCBtn');
     let varFields = []; // array of variable names currently in the form
 
     // -------- util helpers --------
@@ -188,7 +259,13 @@
       templateVars['CC'] = extractVars(cc);
       templateVars['VC'] = extractVars(vc);
       templateVars['CONVENTIONAL'] = extractVars(conv);
-      
+
+      // Combine CC and VC vars for TRUNKING (remove duplicates)
+      const ccVars = new Set(templateVars['CC']);
+      const vcVars = new Set(templateVars['VC']);
+      const allVars = new Set([...ccVars, ...vcVars]);
+      templateVars['TRUNKING'] = Array.from(allVars).sort();
+
       // Show fields for the currently selected type
       showFieldsForType(configTypeEl.value);
     }
@@ -196,6 +273,21 @@
     function showFieldsForType(type) {
       const vars = templateVars[type] || [];
       buildDynamicFields(vars);
+      updateOutputVisibility(type);
+    }
+
+    function updateOutputVisibility(type) {
+      if (type === 'TRUNKING') {
+        outputContainer.className = 'dual';
+        ccWrapper.style.display = 'flex';
+        vcWrapper.style.display = 'flex';
+        convWrapper.style.display = 'none';
+      } else {
+        outputContainer.className = 'single';
+        ccWrapper.style.display = 'none';
+        vcWrapper.style.display = 'none';
+        convWrapper.style.display = 'flex';
+      }
     }
 
     function buildDynamicFields(vars) {
@@ -229,7 +321,15 @@
       const allFilled = [...document.querySelectorAll('#configForm input[required]')].every(i => i.value.trim() !== '');
       generateBtn.disabled = !allFilled;
       // clear downstream state when editing
-      if (!allFilled) { output.value = ''; downloadBtn.disabled = copyBtn.disabled = true; }
+      if (!allFilled) {
+        outputCC.textContent = '';
+        outputVC.textContent = '';
+        outputConv.textContent = '';
+        hiddenOutputCC.value = '';
+        hiddenOutputVC.value = '';
+        hiddenOutputConv.value = '';
+        downloadBtn.disabled = copyBtn.disabled = true;
+      }
     }
 
     function substitute(tmpl) {
@@ -243,45 +343,135 @@
 
     async function generate() {
       try {
-        const tmpl = await fetchTemplate(configTypeEl.value);
-        const generatedYaml = substitute(tmpl);
-        output.textContent = generatedYaml;
-        hiddenOutput.value = generatedYaml;
-        hljs.highlightElement(output);
+        const type = configTypeEl.value;
+
+        if (type === 'TRUNKING') {
+          // Generate both CC and VC configs
+          const ccTmpl = await fetchTemplate('CC');
+          const vcTmpl = await fetchTemplate('VC');
+          const generatedCC = substitute(ccTmpl);
+          const generatedVC = substitute(vcTmpl);
+
+          outputCC.textContent = generatedCC;
+          outputVC.textContent = generatedVC;
+          hiddenOutputCC.value = generatedCC;
+          hiddenOutputVC.value = generatedVC;
+
+          hljs.highlightElement(outputCC);
+          hljs.highlightElement(outputVC);
+
+          copyCCBtn.disabled = false;
+          copyVCBtn.disabled = false;
+        } else {
+          // Generate CONVENTIONAL config
+          const tmpl = await fetchTemplate('CONVENTIONAL');
+          const generatedYaml = substitute(tmpl);
+
+          outputConv.textContent = generatedYaml;
+          hiddenOutputConv.value = generatedYaml;
+
+          hljs.highlightElement(outputConv);
+        }
+
         downloadBtn.disabled = copyBtn.disabled = false;
       } catch (e) {
-        output.textContent = `Error: ${e.message}`;
-        hiddenOutput.value = output.textContent;
+        const errorMsg = `Error: ${e.message}`;
+        if (configTypeEl.value === 'TRUNKING') {
+          outputCC.textContent = errorMsg;
+          outputVC.textContent = errorMsg;
+          hiddenOutputCC.value = errorMsg;
+          hiddenOutputVC.value = errorMsg;
+        } else {
+          outputConv.textContent = errorMsg;
+          hiddenOutputConv.value = errorMsg;
+        }
         downloadBtn.disabled = copyBtn.disabled = true;
       }
     }
 
     function copy() {
-      navigator.clipboard.writeText(hiddenOutput.value).then(() => {
+      const type = configTypeEl.value;
+      let textToCopy = '';
+
+      if (type === 'TRUNKING') {
+        textToCopy = `=== Control Channel (CC) ===\n\n${hiddenOutputCC.value}\n\n=== Voice Channel (VC) ===\n\n${hiddenOutputVC.value}`;
+      } else {
+        textToCopy = hiddenOutputConv.value;
+      }
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
         copyBtn.textContent = 'Copied ✔';
         setTimeout(() => copyBtn.textContent = 'Copy', 2000);
       });
     }
 
     function download() {
-      const blob = new Blob([hiddenOutput.value], { type: 'text/yaml' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `centrunk-config${configTypeEl.value}.yml`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const type = configTypeEl.value;
+
+      if (type === 'TRUNKING') {
+        // Download both CC and VC files
+        const blobCC = new Blob([hiddenOutputCC.value], { type: 'text/yaml' });
+        const urlCC = URL.createObjectURL(blobCC);
+        const aCC = document.createElement('a');
+        aCC.href = urlCC;
+        aCC.download = 'centrunk-configCC.yml';
+        aCC.click();
+        URL.revokeObjectURL(urlCC);
+
+        // Small delay before downloading second file
+        setTimeout(() => {
+          const blobVC = new Blob([hiddenOutputVC.value], { type: 'text/yaml' });
+          const urlVC = URL.createObjectURL(blobVC);
+          const aVC = document.createElement('a');
+          aVC.href = urlVC;
+          aVC.download = 'centrunk-configVC.yml';
+          aVC.click();
+          URL.revokeObjectURL(urlVC);
+        }, 100);
+      } else {
+        const blob = new Blob([hiddenOutputConv.value], { type: 'text/yaml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'centrunk-configCONVENTIONAL.yml';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    function copyCC() {
+      navigator.clipboard.writeText(hiddenOutputCC.value).then(() => {
+        const originalText = copyCCBtn.textContent;
+        copyCCBtn.textContent = 'Copied ✔';
+        setTimeout(() => copyCCBtn.textContent = originalText, 2000);
+      });
+    }
+
+    function copyVC() {
+      navigator.clipboard.writeText(hiddenOutputVC.value).then(() => {
+        const originalText = copyVCBtn.textContent;
+        copyVCBtn.textContent = 'Copied ✔';
+        setTimeout(() => copyVCBtn.textContent = originalText, 2000);
+      });
     }
 
     // Event bindings
     generateBtn.addEventListener('click', e => { e.preventDefault(); generate(); });
     downloadBtn.addEventListener('click', e => { e.preventDefault(); download(); });
     copyBtn.addEventListener('click', e => { e.preventDefault(); copy(); });
+    copyCCBtn.addEventListener('click', e => { e.preventDefault(); copyCC(); });
+    copyVCBtn.addEventListener('click', e => { e.preventDefault(); copyVC(); });
     configTypeEl.addEventListener('change', () => {
       showFieldsForType(configTypeEl.value);
-      output.textContent = '';
-      hiddenOutput.value = '';
+      outputCC.textContent = '';
+      outputVC.textContent = '';
+      outputConv.textContent = '';
+      hiddenOutputCC.value = '';
+      hiddenOutputVC.value = '';
+      hiddenOutputConv.value = '';
       downloadBtn.disabled = copyBtn.disabled = true;
+      copyCCBtn.disabled = true;
+      copyVCBtn.disabled = true;
     });
 
     // Kick things off
