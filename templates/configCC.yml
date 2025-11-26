@@ -7,7 +7,7 @@ log:
     fileRoot: DVM-CC1
 network:
     enable: true
-    id: ${C_PEER_ID}
+    id: ${PEER_ID_C}
     address: 100.76.121.128
     port: 63030
     jitter: 360
