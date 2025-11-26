@@ -132,6 +132,7 @@
       <select id="configType">
         <option value="CC">Control&nbsp;Channel&nbsp;(CC)</option>
         <option value="VC">Voice&nbsp;Channel&nbsp;(VC)</option>
+        <option value="CONVENTIONAL">Conventional&nbsp;Site</option>
       </select>
     </label>
     <!-- Dynamic variable inputs inserted here -->
@@ -147,7 +148,8 @@
   <pre><code id="output" class="language-yaml" aria-label="Generated YAML config"></code></pre>
 
   <script>
-    const templateCache = {}; // { CC: string, VC: string }
+    const templateCache = {}; // { CC: string, VC: string, CONVENTIONAL: string }
+    const templateVars = {}; // { CC: [], VC: [], CONVENTIONAL: [] }
     const form = document.getElementById('configForm');
     const configTypeEl = document.getElementById('configType');
     const output = document.getElementById('output');
@@ -173,12 +175,27 @@
       templateCache[type] = txt; return txt;
     }
 
-    async function loadAllTemplates() {
-      const [cc, vc] = await Promise.all([fetchTemplate('CC'), fetchTemplate('VC')]);
+    function extractVars(template) {
       const vars = new Set();
       const re = /\$\{([A-Z0-9_]+)\}/g;
-      for (const t of [cc, vc]) { let m; while ((m = re.exec(t))) vars.add(m[1]); }
-      buildDynamicFields(Array.from(vars).sort());
+      let m;
+      while ((m = re.exec(template))) vars.add(m[1]);
+      return Array.from(vars).sort();
+    }
+
+    async function loadAllTemplates() {
+      const [cc, vc, conv] = await Promise.all([fetchTemplate('CC'), fetchTemplate('VC'), fetchTemplate('CONVENTIONAL')]);
+      templateVars['CC'] = extractVars(cc);
+      templateVars['VC'] = extractVars(vc);
+      templateVars['CONVENTIONAL'] = extractVars(conv);
+      
+      // Show fields for the currently selected type
+      showFieldsForType(configTypeEl.value);
+    }
+
+    function showFieldsForType(type) {
+      const vars = templateVars[type] || [];
+      buildDynamicFields(vars);
     }
 
     function buildDynamicFields(vars) {
@@ -260,6 +277,12 @@
     generateBtn.addEventListener('click', e => { e.preventDefault(); generate(); });
     downloadBtn.addEventListener('click', e => { e.preventDefault(); download(); });
     copyBtn.addEventListener('click', e => { e.preventDefault(); copy(); });
+    configTypeEl.addEventListener('change', () => {
+      showFieldsForType(configTypeEl.value);
+      output.textContent = '';
+      hiddenOutput.value = '';
+      downloadBtn.disabled = copyBtn.disabled = true;
+    });
 
     // Kick things off
     loadAllTemplates();
