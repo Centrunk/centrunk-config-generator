@@ -218,6 +218,7 @@
     <div class="output-wrapper" id="convWrapper">
       <div class="output-header">
         <h3>Configuration</h3>
+        <button id="copyConvBtn" class="copy-individual" disabled>Copy Config</button>
       </div>
       <textarea class="hidden-output" id="hiddenOutputConv" readonly></textarea>
       <pre><code class="output language-yaml" id="outputConv" aria-label="Generated YAML config"></code></pre>
@@ -243,6 +244,7 @@
     const downloadBtn = document.getElementById('downloadBtn');
     const copyCCBtn = document.getElementById('copyCCBtn');
     const copyVCBtn = document.getElementById('copyVCBtn');
+    const copyConvBtn = document.getElementById('copyConvBtn');
     let varFields = []; // array of variable names currently in the form
 
     // -------- util helpers --------
@@ -346,6 +348,7 @@
         downloadBtn.disabled = true;
         copyCCBtn.disabled = true;
         copyVCBtn.disabled = true;
+        copyConvBtn.disabled = true;
       }
     }
 
@@ -388,6 +391,8 @@
           hiddenOutputConv.value = generatedYaml;
 
           hljs.highlightElement(outputConv);
+
+          copyConvBtn.disabled = false;
         }
 
         downloadBtn.disabled = false;
@@ -456,11 +461,20 @@
       });
     }
 
+    function copyConv() {
+      navigator.clipboard.writeText(hiddenOutputConv.value).then(() => {
+        const originalText = copyConvBtn.textContent;
+        copyConvBtn.textContent = 'Copied ✔';
+        setTimeout(() => copyConvBtn.textContent = originalText, 2000);
+      });
+    }
+
     // Event bindings
     generateBtn.addEventListener('click', e => { e.preventDefault(); generate(); });
     downloadBtn.addEventListener('click', e => { e.preventDefault(); download(); });
     copyCCBtn.addEventListener('click', e => { e.preventDefault(); copyCC(); });
     copyVCBtn.addEventListener('click', e => { e.preventDefault(); copyVC(); });
+    copyConvBtn.addEventListener('click', e => { e.preventDefault(); copyConv(); });
     configTypeEl.addEventListener('change', () => {
       showFieldsForType(configTypeEl.value);
       outputCC.textContent = '';
@@ -472,6 +486,7 @@
       downloadBtn.disabled = true;
       copyCCBtn.disabled = true;
       copyVCBtn.disabled = true;
+      copyConvBtn.disabled = true;
     });
 
     // Kick things off
