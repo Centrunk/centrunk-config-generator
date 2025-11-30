@@ -26,7 +26,7 @@ network:
     restDebug: false
     rpcEnable: true
     rpcAddress: 127.0.0.1
-    rpcPort: 9891
+    rpcPort: 9890
     rpcPassword: "${REST_PASSWORD}"
     rpcDebug: false
 
