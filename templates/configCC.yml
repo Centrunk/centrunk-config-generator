@@ -93,9 +93,6 @@ system:
               rpcAddress: 127.0.0.1
               rpcPort: 9891
               rpcPassword: "${REST_PASSWORD}"
-              restAddress: 127.0.0.1
-              restPort: 9991
-              restPassword: "${REST_PASSWORD}"
         nac: ${NAC}
         ran: 1
         pSuperGroup: 0911
